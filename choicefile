@@ -1,0 +1,38 @@
+pipeline {
+  agent any
+  parameter {
+    choice(
+        // choice are a string of newline separated values
+        // https://issues.jenkins-ci.org/browse/JENKINS-41180
+        choices: 'QA\nDEV',
+        description: '',
+        name: 'ENV')
+       }
+         stages {
+		stage ('checkout'){
+		  steps {
+		        checkout scm }
+			}
+		stage ('build'){
+		   steps { 
+		          sh 'mvn install'}
+			}
+		stage ('copyfiletoQA'){
+		when{
+		   //only say hello if a "greeting" is requested
+		   expression { params.ENV == QA' }
+		}
+		steps {
+		 sh 'echo "copy file"'
+                 sh 'sshpass -p "Chinnu143" scp target/nvn.war sonu@172.17.0.2:/home/sonu/software/apache-tomcat-8.5.23/webapps'
+		sh 'sshpass -p "Chinnu143" ssh sonu@172.17.0.2 "JAVA_HOME= /home/sonu/software/jdk1.8.0_151" "/home/sonu/software/apache-tomcat-8.5.23/bin/./startup.sh"'}
+		stage ('copyfiletoDEV'){
+                when{
+                   //only say hello if a "greeting" is requested
+                   expression { params.ENV == DEV' }
+                }
+                steps {
+                 sh 'echo "copy file"'
+                 sh 'sshpass -p "Chinnu143" scp target/nvn.war adhu@172.17.0.3:/home/adhu/software/apache-tomcat-8.5.23/webapps'
+                sh 'sshpass -p "Chinnu143" ssh adhu@172.17.0.3 "JAVA_HOME= /home/adhu/software/jdk1.8.0_151" "/home/adhu/software/apache-tomcat-8.5.23/bin/./startup.sh"'}
+}
